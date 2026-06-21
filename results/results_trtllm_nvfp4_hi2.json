@@ -1,0 +1,28 @@
+{
+  "tag": "trtllm_nvfp4_hi2",
+  "model": "llama31-8b-nvfp4",
+  "osl": 256,
+  "rounds": 10,
+  "rows": [
+    {
+      "concurrency": 48,
+      "n_req": 480,
+      "qps": 7.614,
+      "out_tok_s": 1949.1,
+      "ttft_p50_ms": 86.8,
+      "ttft_p95_ms": 99.9,
+      "tpot_mean_ms": 24.36,
+      "itl_p95_ms": 34.27
+    },
+    {
+      "concurrency": 64,
+      "n_req": 640,
+      "qps": 25.208,
+      "out_tok_s": 6453.3,
+      "ttft_p50_ms": 84.8,
+      "ttft_p95_ms": 92.1,
+      "tpot_mean_ms": 9.61,
+      "itl_p95_ms": 10.39
+    }
+  ]
+}

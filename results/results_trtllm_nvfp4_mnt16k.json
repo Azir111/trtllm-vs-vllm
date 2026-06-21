@@ -1,0 +1,48 @@
+{
+  "tag": "trtllm_nvfp4_mnt16k",
+  "model": "llama31-8b-nvfp4",
+  "osl": 256,
+  "rounds": 10,
+  "rows": [
+    {
+      "concurrency": 40,
+      "n_req": 400,
+      "qps": 6.794,
+      "out_tok_s": 1739.2,
+      "ttft_p50_ms": 81.9,
+      "ttft_p95_ms": 88.2,
+      "tpot_mean_ms": 22.75,
+      "itl_p95_ms": 25.36
+    },
+    {
+      "concurrency": 48,
+      "n_req": 480,
+      "qps": 8.308,
+      "out_tok_s": 2126.9,
+      "ttft_p50_ms": 82.9,
+      "ttft_p95_ms": 100.4,
+      "tpot_mean_ms": 22.31,
+      "itl_p95_ms": 24.41
+    },
+    {
+      "concurrency": 56,
+      "n_req": 560,
+      "qps": 8.821,
+      "out_tok_s": 2258.2,
+      "ttft_p50_ms": 84.9,
+      "ttft_p95_ms": 108.0,
+      "tpot_mean_ms": 24.52,
+      "itl_p95_ms": 33.96
+    },
+    {
+      "concurrency": 64,
+      "n_req": 640,
+      "qps": 25.338,
+      "out_tok_s": 6486.6,
+      "ttft_p50_ms": 69.1,
+      "ttft_p95_ms": 108.0,
+      "tpot_mean_ms": 9.58,
+      "itl_p95_ms": 10.42
+    }
+  ]
+}

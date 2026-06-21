@@ -1,0 +1,11 @@
+# 模型权重 / 编译缓存 —— 绝不入库
+models/
+fi-cache/
+*.safetensors
+*.bin
+*.vhdx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
