@@ -89,7 +89,6 @@ PASS 标准：三个 prompt 均续写出连贯文本，**无 `sm_120` / `ptxas` 
 
 ## 5. 踩坑记录（现象 → 根因 → 解法）
 
-这一节是核心，后续写项目 README / 面试讲述直接复用。
 
 1. **WSL 默认用户丢失，退回 root**
    - 根因：`sudo tee /etc/wsl.conf`（无 `-a`）整体覆写，冲掉了 `[user] default=qwer` 段。迁移到 F 盘的发行版靠这行保存默认用户。
@@ -125,7 +124,7 @@ PASS 标准：三个 prompt 均续写出连贯文本，**无 `sm_120` / `ptxas` 
 
 ---
 
-## 6. 一句话工程判断（简历 / 面试用）
+## 6. 概括
 
 > 在「国内网络 + WSL2 + Blackwell 消费卡」三重约束下，把**下载与推理解耦**：宿主机走 VPN 拉权重、容器只读本地挂载，绕开 hf-mirror 对大文件的源站重定向；并定位了 dockerd 代理不继承、`layers.nvcr.io` CDN 分流、MPI 多进程 idiom 等一系列真实部署坑。
 
@@ -139,7 +138,7 @@ PASS 标准：三个 prompt 均续写出连贯文本，**无 `sm_120` / `ptxas` 
 
 ---
 
-## 8. NVFP4 路径验证（项目命门 — PASS 存档）
+## 8. NVFP4 路径验证
 
 > 验证日期：2026-06-18
 > 目的：固化「sm_120 消费卡上 NVFP4 推理可跑」。FP16 冒烟（第 4 节）已证明 sm_120 普通 kernel 链路通，本节唯一新增的未知量是 **FP4 GEMM / FlashInfer 的 sm_120 kernel 在 rc15 容器里是否编进**。
@@ -198,9 +197,9 @@ EOF
 
 1. 三个 prompt 续写连贯；
 2. **无 `no kernel image is available` / cutlass FP4 / sm_120 报错**（本步真正在验的就是这个）；
-3. **量化确实生效**（确认未偷偷退回 FP16）。判据不看 `nvidia-smi` 总量 —— pytorch backend 默认按 `free_gpu_memory_fraction≈0.9` 把剩余显存几乎全预占成 KV 池，总量会冲到 13–15GB，不能据此判断。改用两条硬证据：
+3. **量化确认生效**（确认未偷偷退回 FP16）。判据不看 `nvidia-smi` 总量 —— pytorch backend 默认按 `free_gpu_memory_fraction≈0.9` 把剩余显存几乎全预占成 KV 池，总量会冲到 13–15GB，不能据此判断。改用两条硬证据：
    - **显存账反证**：8B 权重若为 FP16 = 16GB，已等于整卡显存，加上 KV 池必 OOM；能成功加载并留得下数 GB 给 KV，反推权重必为量化态。启动日志的 `Allocated X GiB for ... paged KV cache` 一行即可读出 KV 池占用。
-   - **明文实锤**：`cat models/llama31-8b-nvfp4/hf_quant_config.json` 看到 `"quant_algo": "NVFP4"`（权重文件自带声明，板上钉钉）。或 `TLLM_LOG_LEVEL=INFO python nvfp4_smoke.py` 让 TRT-LLM echo 量化配置。
+   - **参数实证**：`cat models/llama31-8b-nvfp4/hf_quant_config.json` 看到 `"quant_algo": "NVFP4"`（权重文件自带声明）。或 `TLLM_LOG_LEVEL=INFO python nvfp4_smoke.py` 让 TRT-LLM echo 量化配置。
 
 ### 8.5 实际输出（2026-06-18）
 
@@ -225,13 +224,13 @@ EOF
 - **KV cache OOM** → `kv_cache_config=KvCacheConfig(free_gpu_memory_fraction=0.7)` 压预分配。
 - **Llama 3.x 在 FP8/NVFP4 下 pipeline parallelism 异常**（官方已知坑）→ `export TRTLLM_LLAMA_EAGER_FUSION_DISABLED=1`。单卡 TP=1 不碰 PP，正常用不到，仅作 fusion 报错兜底。
 
-### 8.7 一句话工程判断（简历 / 面试用）
+### 8.7 概述
 
 > 在 sm_120 Blackwell 消费卡上验证了 NVFP4 端到端推理可跑：确认 rc15 容器内 FP4 GEMM 与 FlashInfer 注意力 kernel 均含 sm_120 编译目标，并复用「宿主机下载 + 容器只读挂载」的解耦链路，绕开国内网络对预量化权重的拉取障碍 —— 为后续 trtllm-vs-vllm × 多精度 benchmark 钉死了 TRT-LLM 侧的 NVFP4 端点。
 
 ---
 
-## 9. vLLM 侧 NVFP4 对照（PASS 存档）
+## 9. vLLM 侧 NVFP4 对照
 
 > 验证日期：2026-06-18
 > 目的：搭起 benchmark 的第二个端点 —— 同一份 NVFP4 权重在 vLLM 上跑通。
@@ -318,21 +317,18 @@ EngineCore ... (v0.13.0+faa43dbf.nv26.01) ... quantization=modelopt_fp4
 
 → **结论**：vLLM 0.13.0 在 sm_120 上走 **flashinfer-cutlass 原生 NVFP4 GEMM**（非 Marlin 回退），权重实占 5.65GB 量化坐实。benchmark 第二端点就位。
 
-### 9.7 benchmark 方法学要点（从本次日志提炼，必须写进测量协议）
+### 9.7 benchmark 方法学要点
 
-否则跨框架对照结论会被质疑：
-
-- **两框架注意力后端不同属预期**：TRT-LLM 侧显式 `FLASHINFER`，vLLM 侧自动选 `FLASH_ATTN`（仅 FP4 GEMM 走 flashinfer-cutlass）。A/B 对照本就是「各框架最优默认路径」对打，不强行统一 kernel，但 README 须写明，否则被误读为未控变量。
+- **两框架注意力后端不同属预期**：TRT-LLM 侧显式 `FLASHINFER`，vLLM 侧自动选 `FLASH_ATTN`（仅 FP4 GEMM 走 flashinfer-cutlass）。A/B 对照本就是「各框架最优默认路径」对打，不强行统一 kernel。
 - **warmup 必须排除在测量外**：vLLM 启动含一次性 `torch.compile 44s + CUDA graph capture 7s`，TRT-LLM 侧亦有自身 graph/warmup。harness 测稳态前先打一轮 warmup 请求甩掉编译/捕获开销，否则首请求 TTFT 被污染成数十秒。
 - **逐字比质量需固定随机性**：测吞吐/延迟无所谓采样随机；若要逐字比输出质量，两边统一 greedy / 固定 seed。
 
-### 9.8 一句话工程判断（简历 / 面试用）
-
-> 搭起 trtllm-vs-vllm 的对照端点时，识别并规避了 vLLM 在 sm_120 上对 NVFP4 的 **Marlin 静默回退**陷阱：以日志中 `Using flashinfer-cutlass for NVFP4 GEMM` 主动确认走原生 FP4 tensor core 而非 weight-only 仿真，保证了跨框架 benchmark 的精度路径可比；并沉淀出「注意力后端差异需声明、warmup 须排除测量」的测量协议，确保对照公平性经得起追问。
+### 9.8 概述
+> 搭起 trtllm-vs-vllm 的对照端点时，识别并规避了 vLLM 在 sm_120 上对 NVFP4 的 **Marlin 静默回退**陷阱：以日志中 `Using flashinfer-cutlass for NVFP4 GEMM` 主动确认走原生 FP4 tensor core 而非 weight-only 仿真，保证了跨框架 benchmark 的精度路径可比；并沉淀出「注意力后端差异需声明、warmup 须排除测量」的测量协议，确保对照公平性。
 
 ---
 
-## 10. benchmark 矩阵：精度 × 并发 × 框架（最终存档）
+## 10. benchmark 矩阵：精度 × 并发 × 框架
 
 > 验证日期：2026-06-21
 > 模型：Llama-3.1-8B-Instruct（全 cell 同一模型，tokenizer 一致→ISL 自动受控）
@@ -366,7 +362,6 @@ NVFP4 的 sm_120 FP4 kernel 是容器**预编**（秒过），但 **FP8 的 sm_1
 - 根因：WSL 默认仅 15GiB 内存，扛不住 12 路并行 nvcc。
 - 解法链：`.wslconfig` 内存 15→26GB（`wsl --shutdown` 生效）+ swap 24GB 兜峰值 → 26GB 裸跑过 12 路。
 - 辅助手段（内存上不去时）：`--cpus 4` 砍 ninja 并行度、`FLASHINFER_JIT_NUM_WORKERS=1`/`NVCC_THREADS=1` 限并发。
-- **缓存挂载**（强烈建议）：`-v ~/trtllm-smoke/fi-cache:/root/.cache/flashinfer`，`--rm` 容器退出后 kernel 不丢，下次秒起。
 
 > 工程判断：定位出「sm_120 上 FP4 预编、FP8 JIT」的容器路径差异 —— 这是国内消费卡 + 新架构组合的真实部署成本，FP8 的启动代价远高于 NVFP4。
 
@@ -415,7 +410,7 @@ vllm_fp8       64   16.675  4268.7     85.7       14.71     16.07
 ### 10.5 三条核心结论
 
 1. **NVFP4 > FP8，两框架内均成立**：高并发吞吐 trtllm 3572 vs 2010 tok/s（c32，+78%）、vllm 5271 vs 4269（c64，+23%）；稳态 TPOT NVFP4 亦更低。decode 为 memory-bound，4bit 权重搬运更少，并发越高优势越显——项目主论点由数据支撑。
-2. **框架取向差异（无人通杀，各有所长）**：vLLM **TTFT 全程更低**（c1：14ms vs trtllm 42ms），首 token 响应快、利于交互；TRT-LLM 命中 graph 捕获点时**稳态 TPOT 更低**、批吞吐更猛。选型取决于「延迟敏感」还是「吞吐优先」。
+2. **框架取向差异（各有所长）**：vLLM **TTFT 全程更低**（c1：14ms vs trtllm 42ms），首 token 响应快、利于交互；TRT-LLM 命中 graph 捕获点时**稳态 TPOT 更低**、批吞吐更猛。选型取决于「延迟敏感」还是「吞吐优先」。
 3. **可复现性**：v1/v2 两轮独立测量逐行吻合（QPS 偏差 <1%），测量协议稳定可信。
 
 ### 10.6 重点发现：CUDA graph 捕获空洞导致吞吐非单调（定位 + 解决闭环）
@@ -441,7 +436,7 @@ vllm_fp8       64   16.675  4268.7     85.7       14.71     16.07
 
 > 配置写法：`cat > pad.yaml << 'EOF'` 内容 `cuda_graph_config:\n  enable_padding: true`，起服务加 `--extra_llm_api_options /workspace/pad.yaml`（rc15 无 `--cuda_graph_config` 命令行 flag）。
 
-### 10.7 一句话工程判断（简历 / 面试用）
+### 10.7 项目概述
 
 > 在 RTX 5070Ti（sm_120, 16GB）上完成 TRT-LLM vs vLLM 的跨框架 × 跨精度（NVFP4/FP8）推理 benchmark，自建 OpenAI 兼容流式 harness 测 TTFT/TPOT/ITL/QPS。定量确立「NVFP4 高并发吞吐优于 FP8、量化使 8B 在 16GB 卡上从不可部署变为可部署」；并定位一个 TRT-LLM 吞吐随并发**非单调**的反直觉现象——通过算 KV 容量、控制变量翻倍 max_num_tokens、查启动日志三步**连续证伪三个假说**，最终锁定 **CUDA graph 捕获空洞（c33–63 未捕获→回退 eager）**，以 `enable_padding` 实测 2.5× 修复。展示了「假说—证伪—控制变量验证」的完整性能 debug 方法论。
 
