@@ -6,8 +6,6 @@
 
 > `TensorRT-LLM 1.3.0rc15` · `vLLM 0.13.0` · `NVFP4 / FP8` · `Llama-3.1-8B-Instruct` · `WSL2 + Docker`
 
-> English version: [README.md](README.md)
-
 ---
 
 ## 速览（TL;DR）
