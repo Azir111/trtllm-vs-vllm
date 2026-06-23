@@ -28,7 +28,7 @@
 | 模型 | `nvidia/Llama-3.1-8B-Instruct-NVFP4` / `-FP8`（ModelOpt 预量化） |
 | 宿主 | Windows + WSL2（Ubuntu, systemd）+ Docker + nvidia-container-toolkit |
 
-两个 NVFP4 端点都验证过走的是 **sm_120 原生 FP4 GEMM，而非 Marlin weight-only 回退** —— 后者是个静默陷阱，一旦回退跨框架对照就变成苹果比橘子。详见 [`SETUP.md`](SETUP.md) 第9节。
+两个 NVFP4 端点都验证过走的是 **sm_120 原生 FP4 GEMM，而非 Marlin weight-only 回退** —— 后者是个静默陷阱，一旦回退跨框架对照就失去意义。详见 [`SETUP.md`](SETUP.md) 第9节。
 
 ---
 
