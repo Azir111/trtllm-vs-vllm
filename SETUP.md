@@ -134,7 +134,7 @@ PASS 标准：三个 prompt 均续写出连贯文本，**无 `sm_120` / `ptxas` 
 
 - [x] **NVFP4 路径验证**（项目命门）：拉一个 `nvidia/` ModelOpt 预量化 NVFP4 checkpoint，确认 sm_120 上 NVFP4 推理可跑。 → **PASS，详见第 8 节**
 - [x] vLLM 侧对照环境搭建（Blackwell + NVFP4）。 → **PASS，详见第 9 节**
-- [x] benchmark 矩阵设计：精度(FP16/FP8/NVFP4) × 并发 × 框架，复用自研 TTFT/TPOT/ITL/QPS harness。 → **完成，详见第 10 节**
+- [x] benchmark 矩阵设计：精度(FP16/FP8/NVFP4) × 并发 × 框架，复用 TTFT/TPOT/ITL/QPS harness。 → **完成，详见第 10 节**
 
 ---
 
